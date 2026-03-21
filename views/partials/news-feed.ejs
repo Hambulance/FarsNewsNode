@@ -1,0 +1,40 @@
+<section class="news-feed">
+  <%- include("pagination", { pagination }) %>
+
+  <div class="news-list">
+    <% if (newsItems.length === 0) { %>
+      <article class="empty-state">
+        <h2>هنوز خبری ذخیره نشده است</h2>
+        <p>به‌محض دریافت اولین خبرهای مرتبط با ایران، این بخش به‌صورت زنده پر می‌شود.</p>
+      </article>
+    <% } %>
+
+    <% newsItems.forEach((item) => { %>
+      <article class="news-card" data-news-id="<%= item.id %>">
+        <div class="news-card__meta">
+          <span class="meta-pill meta-pill--id">شناسه داخلی: <strong><%= item.id %></strong></span>
+          <span class="meta-pill meta-pill--source">منبع: <strong class="latin-news" lang="en" dir="ltr"><%= item.sourceName %></strong></span>
+          <span class="meta-pill meta-pill--time">انتشار: <strong><%= item.publishedAtFormatted %></strong></span>
+        </div>
+        <div class="news-card__headline">
+          <% if (item.isNew) { %>
+            <span class="news-badge">خبر جدید</span>
+          <% } %>
+          <h2><%= item.translatedTitle %></h2>
+        </div>
+        <p class="news-card__summary">
+          <%= item.translatedSummary || "خلاصه‌ای برای این خبر در دسترس نیست." %>
+        </p>
+        <div class="news-card__original">
+          <h3>عنوان اصلی</h3>
+          <p class="latin-news" lang="en" dir="ltr"><%= item.originalTitle %></p>
+        </div>
+        <div class="news-card__links">
+          <a href="<%= item.sourceUrl %>" target="_blank" rel="noreferrer">مشاهده در گوگل نیوز</a>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+
+  <%- include("pagination", { pagination }) %>
+</section>

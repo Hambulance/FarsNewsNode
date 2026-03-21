@@ -1,0 +1,21 @@
+<nav class="pagination" aria-label="صفحه‌بندی خبرها">
+  <a
+    class="pagination__link <%= pagination.hasPrev ? '' : 'is-disabled' %>"
+    href="/?page=<%= pagination.prevPage %>"
+    data-page-link="<%= pagination.prevPage %>"
+    aria-disabled="<%= pagination.hasPrev ? 'false' : 'true' %>"
+  >
+    صفحه قبل
+  </a>
+  <div class="pagination__info">
+    صفحه <strong><%= pagination.currentPage %></strong> از <strong><%= pagination.totalPages %></strong>
+  </div>
+  <a
+    class="pagination__link <%= pagination.hasNext ? '' : 'is-disabled' %>"
+    href="/?page=<%= pagination.nextPage %>"
+    data-page-link="<%= pagination.nextPage %>"
+    aria-disabled="<%= pagination.hasNext ? 'false' : 'true' %>"
+  >
+    صفحه بعد
+  </a>
+</nav>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= siteTitle %></title>
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem("fnn-theme");
+        document.documentElement.dataset.theme = savedTheme || "light";
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/public/styles.css" />
+  </head>
+  <body data-current-page="<%= pagination.currentPage %>">
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero__brand">
+          <div class="hero__topbar">
+            <span class="hero__eyebrow">پایش زندهٔ خبرهای ایران</span>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="تغییر تم" aria-pressed="false">
+              <span class="theme-toggle__icon" aria-hidden="true"></span>
+              <span class="theme-toggle__label">تم تیره</span>
+            </button>
+          </div>
+          <h1>فارس نیوز نود</h1>
+          <p>
+            خبرهای تازهٔ مرتبط با ایران از Google News دریافت می‌شوند، در پایگاه دادهٔ محلی
+            ذخیره می‌شوند و بدون رفرش صفحه به‌روزرسانی می‌شوند.
+          </p>
+        </div>
+        <div class="hero__status">
+          <div class="status-card">
+            <span>وضعیت اتصال</span>
+            <strong id="connection-status">در حال اتصال...</strong>
+          </div>
+          <div class="status-card">
+            <span>نمایش در هر صفحه</span>
+            <strong>۱۰ خبر</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="ticker" aria-label="تیترهای برتر">
+        <div class="ticker__label">تیترهای برتر</div>
+        <div class="ticker__viewport">
+          <div class="ticker__track" id="ticker-track">
+            <% tickerItems.forEach((item) => { %>
+              <span class="ticker__item"><%= item.translatedTitle %></span>
+            <% }) %>
+          </div>
+        </div>
+      </section>
+
+      <main id="news-container">
+        <%- include("partials/news-feed", { newsItems, pagination }) %>
+      </main>
+    </div>
+
+    <%- include("partials/footer") %>
+
+    <script src="/public/client.js" defer></script>
+  </body>
+</html>
