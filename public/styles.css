@@ -376,23 +376,42 @@ a {
   padding: 18px;
 }
 
-.news-card__meta {
+.news-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 0.8rem;
-  margin-bottom: 8px;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.news-card__meta {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.news-card__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 30px;
+}
+
+.news-card__meta-row--secondary {
+  min-height: 30px;
 }
 
 .meta-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
+  gap: 5px;
+  padding: 5px 9px;
   border-radius: 999px;
   border: 1px solid transparent;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(10px);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .meta-pill strong {
@@ -429,10 +448,13 @@ a {
 }
 
 .news-card__headline {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.news-card__body {
+  display: grid;
+  gap: 12px;
+  flex: 1;
 }
 
 .news-card__title-button {
@@ -477,14 +499,16 @@ a {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
+  justify-content: center;
+  padding: 5px 9px;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(216, 69, 45, 0.14), rgba(255, 159, 90, 0.24));
   border: 1px solid rgba(216, 69, 45, 0.18);
   color: var(--danger);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  white-space: nowrap;
 }
 
 :root[data-theme="dark"] .news-badge {
@@ -501,7 +525,6 @@ a {
 }
 
 .news-card__summary-block {
-  margin-top: 12px;
   padding: 12px 14px;
   border-radius: 16px;
   background: rgba(11, 87, 208, 0.05);
@@ -525,7 +548,6 @@ a {
 }
 
 .news-card__original {
-  margin-top: 12px;
   padding: 12px 14px;
   border-radius: 16px;
   background: var(--original-fill);
@@ -549,6 +571,7 @@ a {
 
 .news-card__links {
   margin-top: 14px;
+  padding-top: 2px;
 }
 
 
@@ -730,6 +753,11 @@ a {
 
   .news-list {
     grid-template-columns: 1fr;
+  }
+
+  .news-card__meta-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
 }
 

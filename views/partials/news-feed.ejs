@@ -12,34 +12,44 @@
     <% newsItems.forEach((item) => { %>
       <article class="news-card" data-news-id="<%= item.id %>">
         <div class="news-card__meta">
-          <span class="meta-pill meta-pill--id">شناسه داخلی: <strong><%= item.id %></strong></span>
-          <span class="meta-pill meta-pill--source">منبع: <strong class="latin-news" lang="en" dir="ltr"><%= item.sourceName %></strong></span>
-          <span class="meta-pill meta-pill--time">انتشار: <strong><%= item.publishedAtFormatted %></strong></span>
-        </div>
-        <div class="news-card__headline">
-          <% if (item.isNew) { %>
-            <span class="news-badge">خبر جدید</span>
-          <% } %>
-          <button
-            class="news-card__title-button"
-            type="button"
-            data-full-title="<%- item.translatedTitle %>"
-            data-full-summary="<%- item.translatedSummary || '' %>"
-            aria-label="نمایش جزئیات کامل خبر"
-          >
-            <span class="news-card__title-text"><%= item.translatedTitle %></span>
-          </button>
-        </div>
-        <% if (item.translatedSummary) { %>
-          <div class="news-card__summary-block">
-            <h3>خلاصه خبر</h3>
-            <p class="news-card__summary"><%= item.translatedSummary %></p>
+          <div class="news-card__meta-row">
+            <span class="meta-pill meta-pill--source">منبع: <strong class="latin-news" lang="en" dir="ltr"><%= item.sourceName %></strong></span>
+            <span class="meta-pill meta-pill--id">شناسه داخلی: <strong><%= item.id %></strong></span>
           </div>
-        <% } %>
-        <div class="news-card__original">
-          <h3>عنوان اصلی</h3>
-          <p class="latin-news" lang="en" dir="ltr"><%= item.originalTitle %></p>
+          <div class="news-card__meta-row news-card__meta-row--secondary">
+            <span class="meta-pill meta-pill--time">انتشار: <strong><%= item.publishedAtFormatted %></strong></span>
+            <% if (item.isNew) { %>
+              <span class="news-badge">خبر جدید</span>
+            <% } %>
+          </div>
         </div>
+
+        <div class="news-card__body">
+          <div class="news-card__headline">
+            <button
+              class="news-card__title-button"
+              type="button"
+              data-full-title="<%- item.translatedTitle %>"
+              data-full-summary="<%- item.translatedSummary || '' %>"
+              aria-label="نمایش جزئیات کامل خبر"
+            >
+              <span class="news-card__title-text"><%= item.translatedTitle %></span>
+            </button>
+          </div>
+
+          <% if (item.translatedSummary) { %>
+            <div class="news-card__summary-block">
+              <h3>خلاصه خبر</h3>
+              <p class="news-card__summary"><%= item.translatedSummary %></p>
+            </div>
+          <% } %>
+
+          <div class="news-card__original">
+            <h3>عنوان اصلی</h3>
+            <p class="latin-news" lang="en" dir="ltr"><%= item.originalTitle %></p>
+          </div>
+        </div>
+
         <div class="news-card__links">
           <a href="<%= item.sourceUrl %>" target="_blank" rel="noreferrer">مشاهده در گوگل نیوز</a>
         </div>

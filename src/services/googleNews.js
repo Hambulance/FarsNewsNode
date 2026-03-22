@@ -6,6 +6,7 @@ const {
   insertNewsItem,
   getExistingContentFingerprints,
   getNewsItemsNeedingFarsiRefresh,
+  markOnlyItemsAsNew,
   updateNewsTranslations
 } = require("../db");
 const { translateHeadlineToFarsi, generateNewsSummaryToFarsi } = require("./translator");
@@ -70,6 +71,7 @@ async function fetchLatestIranNews() {
     return {
       source_guid: item.guid || item.link,
       content_fingerprint: createFingerprint(originalTitle, sourceName),
+      is_new: 1,
       source_url: item.link || "",
       google_news_url: item.link || "",
       source_name: sourceName,
@@ -105,12 +107,20 @@ async function fetchLatestIranNews() {
 async function syncNews(onNewsSaved) {
   const fetchedItems = await fetchLatestIranNews();
   const insertedItems = [];
+  const insertedIds = [];
 
   for (const item of fetchedItems) {
-    const inserted = await insertNewsItem(item);
-    if (inserted) {
+    const result = await insertNewsItem(item);
+    if (result.inserted) {
       insertedItems.push(item);
+      if (result.id) {
+        insertedIds.push(result.id);
+      }
     }
+  }
+
+  if (insertedIds.length > 0) {
+    await markOnlyItemsAsNew(insertedIds);
   }
 
   if (insertedItems.length > 0 && typeof onNewsSaved === "function") {

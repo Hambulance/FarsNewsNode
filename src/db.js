@@ -122,6 +122,7 @@ async function initializeDatabase() {
   `);
 
   await ensureColumn("content_fingerprint", "TEXT");
+  await ensureColumn("is_new", "INTEGER NOT NULL DEFAULT 0");
   await ensureColumn("full_article_source_url", "TEXT");
   await ensureColumn("full_article_original", "TEXT");
   await ensureColumn("full_article_farsi", "TEXT");
@@ -180,6 +181,7 @@ async function insertNewsItem(item) {
       INSERT INTO news_items (
         source_guid,
         content_fingerprint,
+        is_new,
         source_url,
         google_news_url,
         source_name,
@@ -194,6 +196,7 @@ async function insertNewsItem(item) {
     [
       item.source_guid,
       item.content_fingerprint,
+      item.is_new ? 1 : 0,
       item.source_url,
       item.google_news_url,
       item.source_name,
@@ -205,7 +208,10 @@ async function insertNewsItem(item) {
     ]
   );
 
-  return result.changes > 0;
+  return {
+    inserted: result.changes > 0,
+    id: result.lastID || null
+  };
 }
 
 async function getExistingContentFingerprints(fingerprints) {
@@ -273,11 +279,23 @@ async function updateNewsTranslations({ id, translatedTitle, translatedSummary }
   );
 }
 
+async function markOnlyItemsAsNew(ids) {
+  await run("UPDATE news_items SET is_new = 0");
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return;
+  }
+
+  const placeholders = ids.map(() => "?").join(", ");
+  await run(`UPDATE news_items SET is_new = 1 WHERE id IN (${placeholders})`, ids);
+}
+
 async function getNewsItemById(id) {
   const item = await get(
     `
       SELECT
         id,
+        is_new AS isNew,
         source_url AS sourceUrl,
         google_news_url AS googleNewsUrl,
         source_name AS sourceName,
@@ -351,22 +369,11 @@ async function getNewsPage(page, pageSize) {
     [pageSize, offset]
   );
 
-  const newestVisibleIds = new Set(
-    (await all(
-      `
-        SELECT id
-        FROM news_items
-        ORDER BY datetime(published_at) DESC, id DESC
-        LIMIT 10
-      `
-    )).map((item) => item.id)
-  );
-
   return items.map((item) => ({
     ...item,
     originalTitle: stripSourceSuffix(item.originalTitle, item.sourceName),
     translatedTitle: stripSourceSuffix(item.translatedTitle, item.sourceName),
-    isNew: newestVisibleIds.has(item.id),
+    isNew: Boolean(item.isNew),
     publishedAtFormatted: dayjs(item.publishedAt).format("YYYY/MM/DD HH:mm"),
     createdAtFormatted: dayjs(item.createdAt).format("YYYY/MM/DD HH:mm")
   }));
@@ -404,6 +411,7 @@ module.exports = {
   getNewsCount,
   getTopTickerItems,
   getNewsItemById,
+  markOnlyItemsAsNew,
   updateNewsTranslations,
   updateFullArticleTranslation
 };
