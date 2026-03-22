@@ -36,14 +36,22 @@ function extractSourceName(item) {
   }
 
   if (typeof source === "string") {
-    return he.decode(source).trim();
+    return normalizeSourceName(he.decode(source).trim());
   }
 
   if (typeof source === "object" && typeof source._ === "string") {
-    return he.decode(source._).trim();
+    return normalizeSourceName(he.decode(source._).trim());
   }
 
   return "Google News";
+}
+
+function normalizeSourceName(sourceName) {
+  if (sourceName === "The Washington Post") {
+    return "TWP";
+  }
+
+  return sourceName;
 }
 
 function cleanTitle(rawTitle, sourceName) {

@@ -18,6 +18,14 @@ function stripSourceSuffix(title, sourceName) {
   return title.endsWith(suffix) ? title.slice(0, -suffix.length).trim() : title;
 }
 
+function normalizeSourceName(sourceName) {
+  if (sourceName === "The Washington Post") {
+    return "TWP";
+  }
+
+  return sourceName;
+}
+
 function getDatabase() {
   if (!db) {
     throw new Error("Database not initialized.");
@@ -134,6 +142,14 @@ async function initializeDatabase() {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_news_items_content_fingerprint
     ON news_items (content_fingerprint);
   `);
+
+  await exec(`
+    CREATE TABLE IF NOT EXISTS app_cache (
+      cache_key TEXT PRIMARY KEY,
+      cache_value TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 }
 
 async function ensureColumn(columnName, typeDefinition) {
@@ -190,7 +206,7 @@ async function insertNewsItem(item) {
         original_summary,
         translated_summary,
         published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT DO NOTHING
     `,
     [
@@ -320,9 +336,54 @@ async function getNewsItemById(id) {
 
   return {
     ...item,
-    originalTitle: stripSourceSuffix(item.originalTitle, item.sourceName),
-    translatedTitle: stripSourceSuffix(item.translatedTitle, item.sourceName)
+    sourceName: normalizeSourceName(item.sourceName),
+    originalTitle: stripSourceSuffix(item.originalTitle, normalizeSourceName(item.sourceName)),
+    translatedTitle: stripSourceSuffix(item.translatedTitle, normalizeSourceName(item.sourceName))
   };
+}
+
+async function getPredictionNewsContext(limit = 24) {
+  return all(
+    `
+      SELECT
+        id,
+        source_name AS sourceName,
+        translated_title AS translatedTitle,
+        translated_summary AS translatedSummary,
+        published_at AS publishedAt
+      FROM news_items
+      ORDER BY datetime(published_at) DESC, id DESC
+      LIMIT ?
+    `,
+    [limit]
+  );
+}
+
+async function getAppCache(key) {
+  return get(
+    `
+      SELECT
+        cache_key AS cacheKey,
+        cache_value AS cacheValue,
+        updated_at AS updatedAt
+      FROM app_cache
+      WHERE cache_key = ?
+    `,
+    [key]
+  );
+}
+
+async function setAppCache(key, value) {
+  await run(
+    `
+      INSERT INTO app_cache (cache_key, cache_value, updated_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(cache_key) DO UPDATE SET
+        cache_value = excluded.cache_value,
+        updated_at = CURRENT_TIMESTAMP
+    `,
+    [key, value]
+  );
 }
 
 async function updateFullArticleTranslation({ id, fullArticleSourceUrl, fullArticleOriginal, fullArticleFarsi }) {
@@ -353,6 +414,10 @@ async function getNewsPage(page, pageSize) {
     `
       SELECT
         id,
+        CASE
+          WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
+          ELSE 0
+        END AS isNew,
         source_url AS sourceUrl,
         google_news_url AS googleNewsUrl,
         source_name AS sourceName,
@@ -363,7 +428,13 @@ async function getNewsPage(page, pageSize) {
         published_at AS publishedAt,
         created_at AS createdAt
       FROM news_items
-      ORDER BY datetime(published_at) DESC, id DESC
+      ORDER BY
+        CASE
+          WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
+          ELSE 0
+        END DESC,
+        datetime(published_at) DESC,
+        id DESC
       LIMIT ? OFFSET ?
     `,
     [pageSize, offset]
@@ -371,8 +442,9 @@ async function getNewsPage(page, pageSize) {
 
   return items.map((item) => ({
     ...item,
-    originalTitle: stripSourceSuffix(item.originalTitle, item.sourceName),
-    translatedTitle: stripSourceSuffix(item.translatedTitle, item.sourceName),
+    sourceName: normalizeSourceName(item.sourceName),
+    originalTitle: stripSourceSuffix(item.originalTitle, normalizeSourceName(item.sourceName)),
+    translatedTitle: stripSourceSuffix(item.translatedTitle, normalizeSourceName(item.sourceName)),
     isNew: Boolean(item.isNew),
     publishedAtFormatted: dayjs(item.publishedAt).format("YYYY/MM/DD HH:mm"),
     createdAtFormatted: dayjs(item.createdAt).format("YYYY/MM/DD HH:mm")
@@ -392,13 +464,20 @@ async function getTopTickerItems(limit) {
         source_name AS sourceName,
         translated_title AS translatedTitle
       FROM news_items
-      ORDER BY datetime(published_at) DESC, id DESC
+      ORDER BY
+        CASE
+          WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
+          ELSE 0
+        END DESC,
+        datetime(published_at) DESC,
+        id DESC
       LIMIT ?
     `,
     [limit]
   )).map((item) => ({
     ...item,
-    translatedTitle: stripSourceSuffix(item.translatedTitle, item.sourceName)
+    sourceName: normalizeSourceName(item.sourceName),
+    translatedTitle: stripSourceSuffix(item.translatedTitle, normalizeSourceName(item.sourceName))
   }));
 }
 
@@ -407,11 +486,14 @@ module.exports = {
   insertNewsItem,
   getExistingContentFingerprints,
   getNewsItemsNeedingFarsiRefresh,
+  getPredictionNewsContext,
+  getAppCache,
   getNewsPage,
   getNewsCount,
   getTopTickerItems,
   getNewsItemById,
   markOnlyItemsAsNew,
+  setAppCache,
   updateNewsTranslations,
   updateFullArticleTranslation
 };

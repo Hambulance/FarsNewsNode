@@ -1,6 +1,6 @@
 const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-5.4-mini";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-4.1-nano";
 
 let healthState = {
   available: false,
@@ -193,8 +193,33 @@ async function streamArticleSummaryToFarsi({ title, sourceName, articleText, onT
   );
 }
 
+async function generateMarketPredictionFarsi(newsItems) {
+  const condensedNews = newsItems
+    .map((item, index) => {
+      const summary = [item.translatedTitle, item.translatedSummary].filter(Boolean).join(" | ");
+      return `${index + 1}. ${summary}`;
+    })
+    .join("\n");
+
+  return createChatCompletion(
+    [
+      {
+        role: "system",
+        content:
+          "You are a cautious Persian macro and markets analyst. Based only on the provided news, write a short Farsi outlook for: US stock market, global stock market, US housing, gasoline/energy prices, and gold. Do not present certainty. Use conditional language. Output only concise Persian text in 5 short labeled lines. Each line must start with one of these labels exactly: بازار سهام آمریکا: ، بازار سهام جهان: ، مسکن آمریکا: ، بنزین و انرژی: ، طلا: ."
+      },
+      {
+        role: "user",
+        content: `Recent news context:\n${condensedNews}`
+      }
+    ],
+    0.25
+  );
+}
+
 module.exports = {
   checkOpenRouter,
+  generateMarketPredictionFarsi,
   rewriteHeadlineToFarsi,
   rewriteSummaryToFarsi,
   translateFullArticleToFarsi,
