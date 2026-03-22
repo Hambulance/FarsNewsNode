@@ -20,7 +20,15 @@
           <% if (item.isNew) { %>
             <span class="news-badge">خبر جدید</span>
           <% } %>
-          <h2><%= item.translatedTitle %></h2>
+          <button
+            class="news-card__title-button"
+            type="button"
+            data-full-title="<%- item.translatedTitle %>"
+            data-full-summary="<%- item.translatedSummary || '' %>"
+            aria-label="نمایش جزئیات کامل خبر"
+          >
+            <span class="news-card__title-text"><%= item.translatedTitle %></span>
+          </button>
         </div>
         <% if (item.translatedSummary) { %>
           <div class="news-card__summary-block">
@@ -40,4 +48,17 @@
   </div>
 
   <%- include("pagination", { pagination }) %>
+
+  <div class="title-modal" id="title-modal" hidden>
+    <div class="title-modal__backdrop" data-title-modal-close></div>
+    <div class="title-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="title-modal-heading">
+      <button class="title-modal__close" type="button" data-title-modal-close aria-label="بستن">×</button>
+      <p class="title-modal__eyebrow">عنوان کامل خبر</p>
+      <h2 class="title-modal__heading" id="title-modal-heading"></h2>
+      <div class="title-modal__summary" id="title-modal-summary-block" hidden>
+        <h3 class="title-modal__summary-label">خلاصه خبر</h3>
+        <p class="title-modal__summary-text" id="title-modal-summary"></p>
+      </div>
+    </div>
+  </div>
 </section>

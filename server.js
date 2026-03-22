@@ -18,7 +18,7 @@ const { checkOpenRouter, streamArticleSummaryToFarsi } = require("./src/services
 const { fetchArticleContent } = require("./src/services/articleContent");
 
 const PORT = process.env.PORT || 3000;
-const NEWS_PER_PAGE = 10;
+const NEWS_PER_PAGE = 12;
 
 async function bootstrap() {
   await initializeDatabase();

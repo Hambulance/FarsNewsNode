@@ -226,6 +226,53 @@ async function getExistingContentFingerprints(fingerprints) {
   return new Set(rows.map((row) => row.contentFingerprint));
 }
 
+async function getNewsItemsNeedingFarsiRefresh(limit = 100) {
+  return (await all(
+    `
+      SELECT
+        id,
+        original_title AS originalTitle,
+        original_summary AS originalSummary,
+        translated_title AS translatedTitle,
+        translated_summary AS translatedSummary
+      FROM news_items
+      ORDER BY datetime(published_at) DESC, id DESC
+      LIMIT ?
+    `,
+    [limit]
+  )).filter((item) => needsFarsiRefresh(item.translatedTitle) || needsFarsiRefresh(item.translatedSummary));
+}
+
+async function updateNewsTranslations({ id, translatedTitle, translatedSummary }) {
+  const updates = [];
+  const params = [];
+
+  if (typeof translatedTitle === "string") {
+    updates.push("translated_title = ?");
+    params.push(translatedTitle);
+  }
+
+  if (typeof translatedSummary === "string") {
+    updates.push("translated_summary = ?");
+    params.push(translatedSummary);
+  }
+
+  if (updates.length === 0) {
+    return;
+  }
+
+  params.push(id);
+
+  await run(
+    `
+      UPDATE news_items
+      SET ${updates.join(", ")}
+      WHERE id = ?
+    `,
+    params
+  );
+}
+
 async function getNewsItemById(id) {
   const item = await get(
     `
@@ -272,6 +319,14 @@ async function updateFullArticleTranslation({ id, fullArticleSourceUrl, fullArti
     `,
     [fullArticleSourceUrl, fullArticleOriginal, fullArticleFarsi, id]
   );
+}
+
+function needsFarsiRefresh(text) {
+  if (!text) {
+    return true;
+  }
+
+  return /[A-Za-z]{4,}/.test(text) || !/[\u0600-\u06FF]/.test(text);
 }
 
 async function getNewsPage(page, pageSize) {
@@ -344,9 +399,11 @@ module.exports = {
   initializeDatabase,
   insertNewsItem,
   getExistingContentFingerprints,
+  getNewsItemsNeedingFarsiRefresh,
   getNewsPage,
   getNewsCount,
   getTopTickerItems,
   getNewsItemById,
+  updateNewsTranslations,
   updateFullArticleTranslation
 };

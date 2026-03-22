@@ -14,7 +14,17 @@ function looksWeakTranslation(text) {
     return true;
   }
 
-  return /[A-Za-z]{4,}/.test(text) || text.length < 8;
+  if (text.length < 8) {
+    return true;
+  }
+
+  const hasPersian = /[\u0600-\u06FF]/.test(text);
+  if (!hasPersian) {
+    return true;
+  }
+
+  const latinWords = text.match(/[A-Za-z]{4,}/g) || [];
+  return latinWords.length > 6;
 }
 
 async function translateHeadlineToFarsi(text) {

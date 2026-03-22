@@ -5,6 +5,15 @@ const themeToggle = document.getElementById("theme-toggle");
 const body = document.body;
 const root = document.documentElement;
 
+function getTitleModalElements() {
+  return {
+    modal: document.getElementById("title-modal"),
+    heading: document.getElementById("title-modal-heading"),
+    summaryBlock: document.getElementById("title-modal-summary-block"),
+    summary: document.getElementById("title-modal-summary")
+  };
+}
+
 async function loadPage(page, pushState = true) {
   const response = await fetch(`/api/news?page=${page}`);
   if (!response.ok) {
@@ -28,6 +37,37 @@ function updateTicker(items) {
     .join("");
 }
 
+function openTitleModal(title, summaryText = "") {
+  const { modal, heading, summaryBlock, summary } = getTitleModalElements();
+  if (!modal || !heading || !summaryBlock || !summary) {
+    return;
+  }
+
+  heading.textContent = title;
+  if (summaryText.trim()) {
+    summary.textContent = summaryText;
+    summaryBlock.hidden = false;
+  } else {
+    summary.textContent = "";
+    summaryBlock.hidden = true;
+  }
+  modal.hidden = false;
+  body.style.overflow = "hidden";
+}
+
+function closeTitleModal() {
+  const { modal, heading, summaryBlock, summary } = getTitleModalElements();
+  if (!modal || modal.hidden || !summaryBlock || !summary) {
+    return;
+  }
+
+  modal.hidden = true;
+  heading.textContent = "";
+  summary.textContent = "";
+  summaryBlock.hidden = true;
+  body.style.overflow = "";
+}
+
 function setupPagination() {
   document.addEventListener("click", async (event) => {
     const link = event.target.closest("[data-page-link]");
@@ -38,6 +78,26 @@ function setupPagination() {
     event.preventDefault();
     const page = Number.parseInt(link.dataset.pageLink, 10);
     await loadPage(page);
+  });
+}
+
+function setupTitleModal() {
+  document.addEventListener("click", (event) => {
+    const titleButton = event.target.closest("[data-full-title]");
+    if (titleButton) {
+      openTitleModal(titleButton.dataset.fullTitle, titleButton.dataset.fullSummary || "");
+      return;
+    }
+
+    if (event.target.closest("[data-title-modal-close]")) {
+      closeTitleModal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeTitleModal();
+    }
   });
 }
 
@@ -98,6 +158,7 @@ function setupThemeToggle() {
 }
 
 setupPagination();
+setupTitleModal();
 setupHistory();
 setupWebSocket();
 setupThemeToggle();

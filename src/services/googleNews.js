@@ -4,7 +4,9 @@ const crypto = require("crypto");
 
 const {
   insertNewsItem,
-  getExistingContentFingerprints
+  getExistingContentFingerprints,
+  getNewsItemsNeedingFarsiRefresh,
+  updateNewsTranslations
 } = require("../db");
 const { translateHeadlineToFarsi, generateNewsSummaryToFarsi } = require("./translator");
 
@@ -116,11 +118,41 @@ async function syncNews(onNewsSaved) {
   }
 }
 
+async function refreshStoredTranslations(onNewsSaved) {
+  const staleItems = await getNewsItemsNeedingFarsiRefresh(150);
+  if (staleItems.length === 0) {
+    return;
+  }
+
+  for (const item of staleItems) {
+    const updates = {};
+
+    if (!item.translatedTitle || /[A-Za-z]{4,}/.test(item.translatedTitle) || !/[\u0600-\u06FF]/.test(item.translatedTitle)) {
+      updates.translatedTitle = await translateHeadlineToFarsi(item.originalTitle);
+    }
+
+    if (!item.translatedSummary || /[A-Za-z]{4,}/.test(item.translatedSummary) || !/[\u0600-\u06FF]/.test(item.translatedSummary)) {
+      updates.translatedSummary = await generateNewsSummaryToFarsi({
+        title: item.originalTitle,
+        summary: item.originalSummary || ""
+      });
+    }
+
+    await updateNewsTranslations({ id: item.id, ...updates });
+  }
+
+  if (typeof onNewsSaved === "function") {
+    onNewsSaved([]);
+  }
+}
+
 async function startNewsSync({ onNewsSaved }) {
+  await refreshStoredTranslations(onNewsSaved);
   await syncNews(onNewsSaved);
 
   setInterval(() => {
-    syncNews(onNewsSaved)
+    refreshStoredTranslations(onNewsSaved)
+      .then(() => syncNews(onNewsSaved))
       .catch((error) => {
         console.error("Scheduled sync failed.", error);
       });
