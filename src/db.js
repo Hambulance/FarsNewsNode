@@ -131,6 +131,7 @@ async function initializeDatabase() {
 
   await ensureColumn("content_fingerprint", "TEXT");
   await ensureColumn("is_new", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn("image_url", "TEXT");
   await ensureColumn("full_article_source_url", "TEXT");
   await ensureColumn("full_article_original", "TEXT");
   await ensureColumn("full_article_farsi", "TEXT");
@@ -198,6 +199,7 @@ async function insertNewsItem(item) {
         source_guid,
         content_fingerprint,
         is_new,
+        image_url,
         source_url,
         google_news_url,
         source_name,
@@ -206,13 +208,14 @@ async function insertNewsItem(item) {
         original_summary,
         translated_summary,
         published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT DO NOTHING
     `,
     [
       item.source_guid,
       item.content_fingerprint,
       item.is_new ? 1 : 0,
+      item.image_url || "",
       item.source_url,
       item.google_news_url,
       item.source_name,
@@ -292,6 +295,33 @@ async function updateNewsTranslations({ id, translatedTitle, translatedSummary }
       WHERE id = ?
     `,
     params
+  );
+}
+
+async function getNewsItemsMissingImages(limit = 24) {
+  return all(
+    `
+      SELECT
+        id,
+        source_url AS sourceUrl
+      FROM news_items
+      WHERE COALESCE(image_url, '') = ''
+      ORDER BY datetime(published_at) DESC, id DESC
+      LIMIT ?
+    `,
+    [limit]
+  );
+}
+
+async function updateNewsImage({ id, imageUrl, sourceUrl }) {
+  await run(
+    `
+      UPDATE news_items
+      SET image_url = ?,
+          source_url = ?
+      WHERE id = ?
+    `,
+    [imageUrl || "", sourceUrl || "", id]
   );
 }
 
@@ -418,6 +448,7 @@ async function getNewsPage(page, pageSize) {
           WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
           ELSE 0
         END AS isNew,
+        image_url AS imageUrl,
         source_url AS sourceUrl,
         google_news_url AS googleNewsUrl,
         source_name AS sourceName,
@@ -462,6 +493,7 @@ async function getTopTickerItems(limit) {
       SELECT
         id,
         source_name AS sourceName,
+        image_url AS imageUrl,
         translated_title AS translatedTitle
       FROM news_items
       ORDER BY
@@ -486,6 +518,7 @@ module.exports = {
   insertNewsItem,
   getExistingContentFingerprints,
   getNewsItemsNeedingFarsiRefresh,
+  getNewsItemsMissingImages,
   getPredictionNewsContext,
   getAppCache,
   getNewsPage,
@@ -494,6 +527,7 @@ module.exports = {
   getNewsItemById,
   markOnlyItemsAsNew,
   setAppCache,
+  updateNewsImage,
   updateNewsTranslations,
   updateFullArticleTranslation
 };

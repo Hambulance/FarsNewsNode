@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">News Placeholder</title>
+  <desc id="desc">Default illustration used when a news article image is unavailable.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10203a"/>
+      <stop offset="55%" stop-color="#132949"/>
+      <stop offset="100%" stop-color="#0b1527"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3f72" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#0e2343" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6fd4cf" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#6d97ff" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.16" stroke="#9ab7ea" stroke-width="1">
+    <path d="M0 120h1600M0 300h1600M0 480h1600M0 660h1600M0 840h1600"/>
+    <path d="M180 0v900M420 0v900M660 0v900M900 0v900M1140 0v900M1380 0v900"/>
+  </g>
+  <g fill="none" stroke="#87a7da" stroke-opacity="0.24" stroke-width="8">
+    <path d="M187 329c76-66 179-96 280-89 68 4 133 25 196 49 43 17 90 32 137 29 58-3 112-32 168-47 84-22 174-14 259 4 53 12 106 28 160 31 48 3 97-4 143-19"/>
+    <path d="M167 560c68-29 142-43 216-40 71 4 140 25 210 38 81 15 167 17 247-4 68-18 130-52 200-59 91-10 179 21 268 36 48 8 98 11 146 5"/>
+    <path d="M299 235c31 14 55 41 82 61 40 30 93 45 143 42 46-2 89-19 131-36 55-22 112-44 171-50 55-6 111 2 165 13"/>
+  </g>
+  <rect x="170" y="146" width="1260" height="608" rx="32" fill="url(#panel)" stroke="#36558a" stroke-opacity="0.42"/>
+  <rect x="230" y="214" width="356" height="224" rx="24" fill="#163257" fill-opacity="0.88" stroke="#5f88d6" stroke-opacity="0.3"/>
+  <rect x="642" y="214" width="560" height="26" rx="13" fill="url(#line)"/>
+  <rect x="642" y="276" width="474" height="18" rx="9" fill="#bfd1f4" fill-opacity="0.78"/>
+  <rect x="642" y="324" width="512" height="18" rx="9" fill="#bfd1f4" fill-opacity="0.62"/>
+  <rect x="642" y="372" width="404" height="18" rx="9" fill="#bfd1f4" fill-opacity="0.48"/>
+  <rect x="230" y="496" width="970" height="24" rx="12" fill="#74d1ca" fill-opacity="0.78"/>
+  <rect x="230" y="552" width="1120" height="18" rx="9" fill="#c2d0ec" fill-opacity="0.65"/>
+  <rect x="230" y="596" width="1044" height="18" rx="9" fill="#c2d0ec" fill-opacity="0.52"/>
+  <rect x="230" y="640" width="908" height="18" rx="9" fill="#c2d0ec" fill-opacity="0.4"/>
+  <g transform="translate(291 271)">
+    <circle cx="118" cy="57" r="57" fill="#0f213d" stroke="#6aa1ff" stroke-opacity="0.42"/>
+    <path d="M118 18c20 0 36 16 36 36 0 13-7 24-18 31v22h-36v-22c-11-7-18-18-18-31 0-20 16-36 36-36z" fill="#74d1ca"/>
+    <rect x="84" y="120" width="68" height="12" rx="6" fill="#6aa1ff" fill-opacity="0.72"/>
+  </g>
+</svg>

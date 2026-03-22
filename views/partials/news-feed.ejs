@@ -11,6 +11,18 @@
 
     <% newsItems.forEach((item) => { %>
       <article class="news-card" data-news-id="<%= item.id %>">
+        <% const cardImageUrl = item.imageUrl || "/public/news-placeholder.svg"; %>
+        <div class="news-card__image-wrap">
+          <img
+            class="news-card__image"
+            src="<%= cardImageUrl %>"
+            alt="<%= item.translatedTitle %>"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            onerror="this.onerror=null;this.src='/public/news-placeholder.svg';"
+          />
+        </div>
+
         <div class="news-card__meta">
           <div class="news-card__meta-row">
             <span class="meta-pill meta-pill--source">منبع: <strong class="latin-news" lang="en" dir="ltr"><%= item.sourceName %></strong></span>

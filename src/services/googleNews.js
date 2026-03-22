@@ -5,10 +5,13 @@ const crypto = require("crypto");
 const {
   insertNewsItem,
   getExistingContentFingerprints,
+  getNewsItemsMissingImages,
   getNewsItemsNeedingFarsiRefresh,
   markOnlyItemsAsNew,
+  updateNewsImage,
   updateNewsTranslations
 } = require("../db");
+const { fetchArticlePreview } = require("./articleContent");
 const { translateHeadlineToFarsi, generateNewsSummaryToFarsi } = require("./translator");
 
 const parser = new Parser({
@@ -80,6 +83,7 @@ async function fetchLatestIranNews() {
       source_guid: item.guid || item.link,
       content_fingerprint: createFingerprint(originalTitle, sourceName),
       is_new: 1,
+      image_url: "",
       source_url: item.link || "",
       google_news_url: item.link || "",
       source_name: sourceName,
@@ -106,6 +110,13 @@ async function fetchLatestIranNews() {
       title: item.original_title,
       summary: item.original_summary
     });
+    try {
+      const preview = await fetchArticlePreview(item.source_url);
+      item.image_url = preview.imageUrl || "";
+      item.source_url = preview.finalUrl || item.source_url;
+    } catch (error) {
+      item.image_url = "";
+    }
     newItems.push(item);
   }
 
@@ -164,12 +175,45 @@ async function refreshStoredTranslations(onNewsSaved) {
   }
 }
 
+async function backfillMissingImages(onNewsSaved) {
+  const items = await getNewsItemsMissingImages(24);
+  if (items.length === 0) {
+    return;
+  }
+
+  let updatedCount = 0;
+
+  for (const item of items) {
+    try {
+      const preview = await fetchArticlePreview(item.sourceUrl);
+      if (!preview.imageUrl) {
+        continue;
+      }
+
+      await updateNewsImage({
+        id: item.id,
+        imageUrl: preview.imageUrl,
+        sourceUrl: preview.finalUrl || item.sourceUrl
+      });
+      updatedCount += 1;
+    } catch (error) {
+      continue;
+    }
+  }
+
+  if (updatedCount > 0 && typeof onNewsSaved === "function") {
+    onNewsSaved([]);
+  }
+}
+
 async function startNewsSync({ onNewsSaved }) {
   await refreshStoredTranslations(onNewsSaved);
+  await backfillMissingImages(onNewsSaved);
   await syncNews(onNewsSaved);
 
   setInterval(() => {
     refreshStoredTranslations(onNewsSaved)
+      .then(() => backfillMissingImages(onNewsSaved))
       .then(() => syncNews(onNewsSaved))
       .catch((error) => {
         console.error("Scheduled sync failed.", error);
