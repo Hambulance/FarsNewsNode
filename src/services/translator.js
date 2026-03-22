@@ -1,15 +1,23 @@
-const translate = require("translate-google");
+const { rewriteHeadlineToFarsi, rewriteSummaryToFarsi } = require("./openRouter");
 
 function normalizeForTranslation(text) {
   return text
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/…/g, "...")
+    .replace(/[â€˜â€™]/g, "'")
+    .replace(/[â€œâ€]/g, '"')
+    .replace(/â€¦/g, "...")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-async function translateToEnglish(text) {
+function looksWeakTranslation(text) {
+  if (!text) {
+    return true;
+  }
+
+  return /[A-Za-z]{4,}/.test(text) || text.length < 8;
+}
+
+async function translateHeadlineToFarsi(text) {
   if (!text) {
     return "";
   }
@@ -17,11 +25,41 @@ async function translateToEnglish(text) {
   const normalizedText = normalizeForTranslation(text);
 
   try {
-    return await translate(normalizedText, { to: "fa" });
+    const translated = await rewriteHeadlineToFarsi(normalizedText);
+    return looksWeakTranslation(translated) ? normalizedText : translated;
   } catch (error) {
-    console.error("Translation failed, using original text.", error.message);
+    console.error("OpenRouter headline translation failed, using original text.", error.message);
     return normalizedText;
   }
 }
 
-module.exports = { translateToEnglish };
+async function translateSummaryToFarsi(text) {
+  if (!text) {
+    return "";
+  }
+
+  const normalizedText = normalizeForTranslation(text);
+
+  try {
+    const translated = await rewriteSummaryToFarsi(normalizedText);
+    return looksWeakTranslation(translated) ? normalizedText : translated;
+  } catch (error) {
+    console.error("OpenRouter summary translation failed, using original text.", error.message);
+    return normalizedText;
+  }
+}
+
+async function generateNewsSummaryToFarsi({ title, summary }) {
+  const mergedInput = [title, summary].filter(Boolean).join("\n");
+  if (!mergedInput) {
+    return "";
+  }
+
+  return translateSummaryToFarsi(mergedInput);
+}
+
+module.exports = {
+  translateHeadlineToFarsi,
+  translateSummaryToFarsi,
+  generateNewsSummaryToFarsi
+};

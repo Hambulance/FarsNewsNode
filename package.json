@@ -8,12 +8,16 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "dayjs": "^1.11.13",
+    "dotenv": "^17.3.1",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
+    "google-news-decoder": "^1.0.1",
     "he": "^1.2.0",
+    "jsdom": "^26.1.0",
     "rss-parser": "^3.13.0",
-    "translate-google": "^1.5.0",
+    "sqlite3": "^6.0.1",
     "vazir-font": "^27.2.2",
     "ws": "^8.18.0"
   }

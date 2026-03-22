@@ -22,9 +22,12 @@
           <% } %>
           <h2><%= item.translatedTitle %></h2>
         </div>
-        <p class="news-card__summary">
-          <%= item.translatedSummary || "خلاصه‌ای برای این خبر در دسترس نیست." %>
-        </p>
+        <% if (item.translatedSummary) { %>
+          <div class="news-card__summary-block">
+            <h3>خلاصه خبر</h3>
+            <p class="news-card__summary"><%= item.translatedSummary %></p>
+          </div>
+        <% } %>
         <div class="news-card__original">
           <h3>عنوان اصلی</h3>
           <p class="latin-news" lang="en" dir="ltr"><%= item.originalTitle %></p>

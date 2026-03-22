@@ -2,8 +2,11 @@ const Parser = require("rss-parser");
 const he = require("he");
 const crypto = require("crypto");
 
-const { insertNewsItem, getNewsItemsNeedingFarsiRefresh, updateNewsTranslations } = require("../db");
-const { translateToEnglish } = require("./translator");
+const {
+  insertNewsItem,
+  getExistingContentFingerprints
+} = require("../db");
+const { translateHeadlineToFarsi, generateNewsSummaryToFarsi } = require("./translator");
 
 const parser = new Parser({
   customFields: {
@@ -58,31 +61,43 @@ function createFingerprint(title, sourceName) {
 
 async function fetchLatestIranNews() {
   const feed = await parser.parseURL(RSS_FEED_URL);
-  const items = [];
-
-  for (const item of feed.items || []) {
+  const rawItems = (feed.items || []).map((item) => {
     const sourceName = extractSourceName(item);
     const originalTitle = cleanTitle(item.title, sourceName);
     const originalSummary = normalizeSummary(item.contentSnippet);
-
-    const translatedTitle = await translateToEnglish(originalTitle);
-    const translatedSummary = await translateToEnglish(originalSummary);
-
-    items.push({
+    return {
       source_guid: item.guid || item.link,
       content_fingerprint: createFingerprint(originalTitle, sourceName),
       source_url: item.link || "",
       google_news_url: item.link || "",
       source_name: sourceName,
       original_title: originalTitle,
-      translated_title: translatedTitle,
+      translated_title: "",
       original_summary: originalSummary,
-      translated_summary: translatedSummary,
+      translated_summary: "",
       published_at: item.isoDate || new Date().toISOString()
+    };
+  });
+
+  const existingFingerprints = await getExistingContentFingerprints(
+    rawItems.map((item) => item.content_fingerprint)
+  );
+  const newItems = [];
+
+  for (const item of rawItems) {
+    if (existingFingerprints.has(item.content_fingerprint)) {
+      continue;
+    }
+
+    item.translated_title = await translateHeadlineToFarsi(item.original_title);
+    item.translated_summary = await generateNewsSummaryToFarsi({
+      title: item.original_title,
+      summary: item.original_summary
     });
+    newItems.push(item);
   }
 
-  return items;
+  return newItems;
 }
 
 async function syncNews(onNewsSaved) {
@@ -90,7 +105,7 @@ async function syncNews(onNewsSaved) {
   const insertedItems = [];
 
   for (const item of fetchedItems) {
-    const inserted = insertNewsItem(item);
+    const inserted = await insertNewsItem(item);
     if (inserted) {
       insertedItems.push(item);
     }
@@ -101,37 +116,13 @@ async function syncNews(onNewsSaved) {
   }
 }
 
-async function refreshStoredTranslations(onNewsSaved) {
-  const staleItems = getNewsItemsNeedingFarsiRefresh(150);
-  if (staleItems.length === 0) {
-    return;
-  }
-
-  for (const item of staleItems) {
-    const translatedTitle = await translateToEnglish(item.originalTitle);
-    const translatedSummary = await translateToEnglish(item.originalSummary || "");
-
-    updateNewsTranslations({
-      id: item.id,
-      translatedTitle,
-      translatedSummary
-    });
-  }
-
-  if (typeof onNewsSaved === "function") {
-    onNewsSaved([]);
-  }
-}
-
 async function startNewsSync({ onNewsSaved }) {
-  await refreshStoredTranslations(onNewsSaved);
   await syncNews(onNewsSaved);
 
   setInterval(() => {
-    refreshStoredTranslations(onNewsSaved)
-      .then(() => syncNews(onNewsSaved))
+    syncNews(onNewsSaved)
       .catch((error) => {
-      console.error("Scheduled sync failed.", error);
+        console.error("Scheduled sync failed.", error);
       });
   }, SYNC_INTERVAL_MS);
 }
