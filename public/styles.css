@@ -1089,6 +1089,25 @@ a {
   color: #ff9d7e !important;
 }
 
+.admin-status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.admin-status-dot--ok {
+  background: #7ae5d3;
+  box-shadow: 0 0 0 6px rgba(122, 229, 211, 0.12);
+}
+
+.admin-status-dot--fail {
+  background: #ff9d7e;
+  box-shadow: 0 0 0 6px rgba(255, 157, 126, 0.12);
+}
+
 .admin-button {
   display: inline-flex;
   align-items: center;

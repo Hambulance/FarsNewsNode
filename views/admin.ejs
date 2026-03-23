@@ -14,7 +14,7 @@
             <div class="admin-login-brand">
               <span class="admin-kicker">FNN Control</span>
               <h1>ورود به پنل مدیریت</h1>
-              <p>برای مدیریت ارائه‌دهنده‌های هوش مصنوعی، تست اتصال، و تغییر مشخصات مدیر وارد شوید.</p>
+              <p>برای مدیریت ارائه‌دهنده‌های هوش مصنوعی، تست اتصال، تنظیم API key و ابزار گفت‌وگوی TensorRT وارد شوید.</p>
             </div>
 
             <% if (error) { %>
@@ -50,11 +50,12 @@
             <div class="admin-sidebar__brand">
               <span class="admin-kicker">FNN Control</span>
               <h1>پنل مدیریت</h1>
-              <p>مدیریت هوش مصنوعی، تست زیرساخت، و امنیت دسترسی</p>
+              <p>مدیریت هوش مصنوعی، سلامت سرویس‌ها، و ابزارهای محلی</p>
             </div>
 
             <nav class="admin-nav" aria-label="بخش‌های مدیریت">
               <a href="#overview" class="admin-nav__link">نمای کلی</a>
+              <a href="#chat-tool" class="admin-nav__link">TensorRT Chat</a>
               <a href="#providers" class="admin-nav__link">ارائه‌دهنده‌ها</a>
               <a href="#diagnostics" class="admin-nav__link">تست و سلامت</a>
               <a href="#access" class="admin-nav__link">دسترسی مدیر</a>
@@ -74,8 +75,8 @@
             <header class="admin-topbar" id="overview">
               <div>
                 <span class="admin-section-tag">داشبورد مدیریتی</span>
-                <h2>مدیریت تنظیمات هوش مصنوعی و دسترسی</h2>
-                <p>در این صفحه می‌توانید ارائه‌دهنده‌ی فعال را تغییر دهید، اتصال هر دو سرویس را تست کنید، و مشخصات مدیر را به‌روزرسانی کنید.</p>
+                <h2>مدیریت تنظیمات هوش مصنوعی و ابزارهای محلی</h2>
+                <p>در این صفحه می‌توانید ارائه‌دهنده‌ی فعال را تغییر دهید، اتصال هر دو سرویس را تست کنید، API key را به‌روزرسانی کنید و ابزار چت TensorRT را اجرا کنید.</p>
               </div>
             </header>
 
@@ -105,6 +106,30 @@
               </article>
             </section>
 
+            <section class="admin-category" id="chat-tool">
+              <div class="admin-category__header">
+                <div>
+                  <h3>ابزار گفت‌وگوی TensorRT</h3>
+                </div>
+                <p>وضعیت ابزار گفت‌وگوی مستقل TensorRT را ببینید و در صورت فعال بودن آن را باز کنید.</p>
+              </div>
+
+              <section class="admin-panel admin-panel--padded">
+                <div class="admin-panel__toolbar">
+                  <div>
+                    <h4>وضعیت Chat App</h4>
+                    <p>
+                      <span class="admin-status-dot <%= chatAppStatus.online ? 'admin-status-dot--ok' : 'admin-status-dot--fail' %>"></span>
+                      <strong class="<%= chatAppStatus.online ? 'admin-test-ok' : 'admin-test-fail' %>">
+                        <%= chatAppStatus.online ? "Online" : "Offline" %>
+                      </strong>
+                    </p>
+                  </div>
+                  <a class="admin-button" href="<%= chatAppAccessUrl %>" target="_blank" rel="noreferrer">Open Chat App</a>
+                </div>
+              </section>
+            </section>
+
             <section class="admin-category" id="providers">
               <div class="admin-category__header">
                 <div>
@@ -121,7 +146,7 @@
                       <input type="radio" name="aiProvider" value="openrouter" <%= activeProvider === "openrouter" ? "checked" : "" %> />
                       <span>
                         <strong>OpenRouter</strong>
-                        <small>سرویس ابری با استفاده از `OPENROUTER_API_KEY`</small>
+                        <small>سرویس ابری با استفاده از API Key</small>
                       </span>
                     </label>
 
@@ -186,7 +211,7 @@
                 <div>
                   <h3>تست اتصال و سلامت سرویس‌ها</h3>
                 </div>
-                <p>این تست مستقیماً درخواست کوتاه `chat/completions` به هر دو سرویس می‌فرستد و نتیجه، مدل، و زمان پاسخ را ثبت می‌کند.</p>
+                <p>این تست مستقیماً درخواست کوتاه chat/completions به هر دو سرویس می‌فرستد و نتیجه، مدل، و زمان پاسخ را ثبت می‌کند.</p>
               </div>
 
               <section class="admin-panel admin-panel--padded">

@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 const http = require("http");
+const crypto = require("crypto");
 const express = require("express");
 
 const {
@@ -36,6 +37,46 @@ const { fetchArticleContent } = require("./src/services/articleContent");
 
 const PORT = process.env.PORT || 3000;
 const NEWS_PER_PAGE = 12;
+const TENSORRT_CHAT_APP_URL = "http://127.0.0.1:3001";
+const TENSORRT_CHAT_TRANSFER_SECRET =
+  process.env.TENSORRT_CHAT_TRANSFER_SECRET ||
+  process.env.ADMIN_SESSION_SECRET ||
+  process.env.SESSION_SECRET ||
+  "fnn-tensorrt-chat-transfer-secret";
+
+function createTensorRtChatTransferToken() {
+  const expiresAt = Date.now() + 60 * 1000;
+  const payload = `${expiresAt}`;
+  const signature = crypto
+    .createHmac("sha256", TENSORRT_CHAT_TRANSFER_SECRET)
+    .update(payload)
+    .digest("base64url");
+
+  return Buffer.from(JSON.stringify({ expiresAt, signature }), "utf8").toString("base64url");
+}
+
+async function getTensorRtChatAppStatus() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
+
+  try {
+    const response = await fetch(TENSORRT_CHAT_APP_URL, {
+      signal: controller.signal
+    });
+
+    return {
+      url: TENSORRT_CHAT_APP_URL.replace("127.0.0.1", "localhost"),
+      online: response.ok
+    };
+  } catch (error) {
+    return {
+      url: TENSORRT_CHAT_APP_URL.replace("127.0.0.1", "localhost"),
+      online: false
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 async function bootstrap() {
   await initializeDatabase();
@@ -77,11 +118,14 @@ async function bootstrap() {
   async function buildAdminViewModel({ error = "", notice = "", testResults = null } = {}) {
     const admin = await getAdminSettings();
     const providerStatus = await getAiProviderStatus(true);
+    const chatAppStatus = await getTensorRtChatAppStatus();
 
     return {
       error,
       notice,
       testResults,
+      chatAppStatus,
+      chatAppAccessUrl: `${TENSORRT_CHAT_APP_URL.replace("127.0.0.1", "localhost")}/enter?access=${createTensorRtChatTransferToken()}`,
       defaultUsername: DEFAULT_USERNAME,
       defaultPassword: DEFAULT_PASSWORD,
       adminUsername: admin.username,
