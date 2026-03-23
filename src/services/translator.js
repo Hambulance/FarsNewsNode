@@ -1,4 +1,4 @@
-const { rewriteHeadlineToFarsi, rewriteSummaryToFarsi } = require("./openRouter");
+const { rewriteHeadlineToFarsi, rewriteSummaryToFarsi } = require("./aiClient");
 
 function normalizeForTranslation(text) {
   return text

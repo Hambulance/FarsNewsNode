@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>پنل مدیریت</title>
+    <link rel="stylesheet" href="/public/styles.css" />
+  </head>
+  <body>
+    <main class="admin-dashboard">
+      <% if (!isAuthenticated) { %>
+        <section class="admin-login-shell">
+          <div class="admin-login-card">
+            <div class="admin-login-brand">
+              <span class="admin-kicker">FNN Control</span>
+              <h1>ورود به پنل مدیریت</h1>
+              <p>برای مدیریت ارائه‌دهنده‌های هوش مصنوعی، تست اتصال، و تغییر مشخصات مدیر وارد شوید.</p>
+            </div>
+
+            <% if (error) { %>
+              <div class="admin-alert admin-alert--error"><%= error %></div>
+            <% } %>
+
+            <% if (notice) { %>
+              <div class="admin-alert admin-alert--success"><%= notice %></div>
+            <% } %>
+
+            <div class="admin-login-hint">
+              <span>ورود پیش‌فرض</span>
+              <strong><%= defaultUsername %></strong>
+              <strong><%= defaultPassword %></strong>
+            </div>
+
+            <form class="admin-form" action="/admin/login" method="post">
+              <label class="admin-field">
+                <span>نام کاربری</span>
+                <input type="text" name="username" value="<%= defaultUsername %>" required />
+              </label>
+              <label class="admin-field">
+                <span>رمز عبور</span>
+                <input type="password" name="password" value="<%= defaultPassword %>" required />
+              </label>
+              <button class="admin-button" type="submit">ورود به پنل</button>
+            </form>
+          </div>
+        </section>
+      <% } else { %>
+        <div class="admin-shell">
+          <aside class="admin-sidebar">
+            <div class="admin-sidebar__brand">
+              <span class="admin-kicker">FNN Control</span>
+              <h1>پنل مدیریت</h1>
+              <p>مدیریت هوش مصنوعی، تست زیرساخت، و امنیت دسترسی</p>
+            </div>
+
+            <nav class="admin-nav" aria-label="بخش‌های مدیریت">
+              <a href="#overview" class="admin-nav__link">نمای کلی</a>
+              <a href="#providers" class="admin-nav__link">ارائه‌دهنده‌ها</a>
+              <a href="#diagnostics" class="admin-nav__link">تست و سلامت</a>
+              <a href="#access" class="admin-nav__link">دسترسی مدیر</a>
+            </nav>
+
+            <div class="admin-sidebar__meta">
+              <span>ارائه‌دهنده‌ی فعال</span>
+              <strong><%= activeProviderLabel %></strong>
+            </div>
+
+            <form action="/admin/logout" method="post">
+              <button class="admin-button admin-button--ghost admin-button--full" type="submit">خروج از پنل</button>
+            </form>
+          </aside>
+
+          <section class="admin-content">
+            <header class="admin-topbar" id="overview">
+              <div>
+                <span class="admin-section-tag">داشبورد مدیریتی</span>
+                <h2>مدیریت تنظیمات هوش مصنوعی و دسترسی</h2>
+                <p>در این صفحه می‌توانید ارائه‌دهنده‌ی فعال را تغییر دهید، اتصال هر دو سرویس را تست کنید، و مشخصات مدیر را به‌روزرسانی کنید.</p>
+              </div>
+            </header>
+
+            <% if (error) { %>
+              <div class="admin-alert admin-alert--error"><%= error %></div>
+            <% } %>
+
+            <% if (notice) { %>
+              <div class="admin-alert admin-alert--success"><%= notice %></div>
+            <% } %>
+
+            <section class="admin-summary-grid">
+              <article class="admin-metric-card">
+                <span>وضعیت فعال</span>
+                <strong><%= activeProviderLabel %></strong>
+                <small>تمام رویدادهای فعلی با این سرویس انجام می‌شوند.</small>
+              </article>
+              <article class="admin-metric-card">
+                <span>OpenRouter</span>
+                <strong><%= providers.openrouter.available ? "در دسترس" : "نیازمند بررسی" %></strong>
+                <small>مدل: <%= providers.openrouter.model %></small>
+              </article>
+              <article class="admin-metric-card">
+                <span>TensorRT-LLM</span>
+                <strong><%= providers.local.available ? "در دسترس" : "نیازمند بررسی" %></strong>
+                <small>مدل: <%= providers.local.model %></small>
+              </article>
+            </section>
+
+            <section class="admin-category" id="providers">
+              <div class="admin-category__header">
+                <div>
+                  <h3>مدیریت ارائه‌دهنده‌های هوش مصنوعی</h3>
+                </div>
+                <p>بین OpenRouter و سرور محلی TensorRT-LLM جابه‌جا شوید. تمام ترجمه‌ها و رویدادهای AI از همین تنظیم استفاده می‌کنند.</p>
+              </div>
+
+              <div class="admin-panels-grid">
+                <section class="admin-panel admin-panel--padded">
+                  <h4>انتخاب ارائه‌دهنده</h4>
+                  <form class="admin-form" action="/admin/provider" method="post">
+                    <label class="admin-radio">
+                      <input type="radio" name="aiProvider" value="openrouter" <%= activeProvider === "openrouter" ? "checked" : "" %> />
+                      <span>
+                        <strong>OpenRouter</strong>
+                        <small>سرویس ابری با استفاده از `OPENROUTER_API_KEY`</small>
+                      </span>
+                    </label>
+
+                    <label class="admin-radio">
+                      <input type="radio" name="aiProvider" value="local" <%= activeProvider === "local" ? "checked" : "" %> />
+                      <span>
+                        <strong>TensorRT-LLM Local</strong>
+                        <small>سرور محلی روی <%= providers.local.baseUrl %> بدون API</small>
+                      </span>
+                    </label>
+
+                    <button class="admin-button" type="submit">ذخیره‌ی ارائه‌دهنده</button>
+                  </form>
+                </section>
+
+                <section class="admin-panel admin-panel--padded">
+                  <h4>جزئیات سرویس‌ها</h4>
+                  <div class="admin-provider-list">
+                    <article class="admin-provider-item">
+                      <div>
+                        <span>OpenRouter</span>
+                        <strong><%= providers.openrouter.available ? "در دسترس" : "غیرفعال / در دسترس نیست" %></strong>
+                      </div>
+                      <small>Endpoint: <%= providers.openrouter.baseUrl %></small>
+                      <small>Model: <%= providers.openrouter.model %></small>
+                    </article>
+
+                    <article class="admin-provider-item">
+                      <div>
+                        <span>TensorRT-LLM</span>
+                        <strong><%= providers.local.available ? "در دسترس" : "در دسترس نیست" %></strong>
+                      </div>
+                      <small>Endpoint: <%= providers.local.baseUrl %></small>
+                      <small>Model: <%= providers.local.model %></small>
+                    </article>
+                  </div>
+                </section>
+              </div>
+
+              <section class="admin-panel admin-panel--padded">
+                <div class="admin-panel__toolbar">
+                  <div>
+                    <h4>OpenRouter API Key</h4>
+                    <p>کلید فعلی را مشاهده کنید و در صورت نیاز آن را با کلید جدید جایگزین کنید.</p>
+                  </div>
+                </div>
+
+                <form class="admin-form" action="/admin/openrouter-api-key" method="post">
+                  <label class="admin-field">
+                    <span>کلید فعلی / جدید</span>
+                    <input type="text" name="openrouterApiKey" value="<%= openrouterApiKey %>" placeholder="sk-or-v1-..." />
+                  </label>
+                  <div class="admin-form__actions">
+                    <button class="admin-button" type="submit">ذخیره‌ی API Key</button>
+                  </div>
+                </form>
+              </section>
+            </section>
+
+            <section class="admin-category" id="diagnostics">
+              <div class="admin-category__header">
+                <div>
+                  <h3>تست اتصال و سلامت سرویس‌ها</h3>
+                </div>
+                <p>این تست مستقیماً درخواست کوتاه `chat/completions` به هر دو سرویس می‌فرستد و نتیجه، مدل، و زمان پاسخ را ثبت می‌کند.</p>
+              </div>
+
+              <section class="admin-panel admin-panel--padded">
+                <div class="admin-panel__toolbar">
+                  <div>
+                    <h4>Connectivity Test</h4>
+                    <p>برای بررسی مستقل هر دو سرویس از این تست استفاده کنید.</p>
+                  </div>
+                  <form action="/admin/connectivity-test" method="post">
+                    <button class="admin-button admin-button--ghost" type="submit">اجرای تست هر دو سرویس</button>
+                  </form>
+                </div>
+
+                <div class="admin-status-grid admin-status-grid--results">
+                  <article class="admin-status-card">
+                    <span>OpenRouter</span>
+                    <strong class="<%= testResults && testResults.openrouter.ok ? 'admin-test-ok' : (testResults ? 'admin-test-fail' : '') %>">
+                      <%= testResults ? (testResults.openrouter.ok ? "موفق" : "ناموفق") : "هنوز اجرا نشده" %>
+                    </strong>
+                    <small>مدل: <%= testResults ? testResults.openrouter.model : providers.openrouter.model %></small>
+                    <small>زمان پاسخ: <%= testResults ? `${testResults.openrouter.durationMs}ms` : "..." %></small>
+                    <small>پیام: <%= testResults ? testResults.openrouter.message : "برای مشاهده‌ی نتیجه تست را اجرا کنید." %></small>
+                  </article>
+
+                  <article class="admin-status-card">
+                    <span>TensorRT-LLM</span>
+                    <strong class="<%= testResults && testResults.local.ok ? 'admin-test-ok' : (testResults ? 'admin-test-fail' : '') %>">
+                      <%= testResults ? (testResults.local.ok ? "موفق" : "ناموفق") : "هنوز اجرا نشده" %>
+                    </strong>
+                    <small>مدل: <%= testResults ? testResults.local.model : providers.local.model %></small>
+                    <small>زمان پاسخ: <%= testResults ? `${testResults.local.durationMs}ms` : "..." %></small>
+                    <small>پیام: <%= testResults ? testResults.local.message : "برای مشاهده‌ی نتیجه تست را اجرا کنید." %></small>
+                  </article>
+                </div>
+              </section>
+            </section>
+
+            <section class="admin-category" id="access">
+              <div class="admin-category__header">
+                <div>
+                  <h3>امنیت و دسترسی مدیر</h3>
+                </div>
+                <p>برای جلوگیری از دسترسی ناخواسته، مشخصات مدیر را از همین بخش تغییر دهید. رمز فعلی برای تأیید تغییر لازم است.</p>
+              </div>
+
+              <section class="admin-panel admin-panel--padded">
+                <div class="admin-panel__toolbar">
+                  <div>
+                    <h4>مشخصات مدیر</h4>
+                    <p>نام کاربری فعلی: <strong><%= adminUsername %></strong></p>
+                  </div>
+                </div>
+
+                <form class="admin-form admin-form--two-col" action="/admin/credentials" method="post">
+                  <label class="admin-field">
+                    <span>رمز فعلی</span>
+                    <input type="password" name="currentPassword" required />
+                  </label>
+                  <label class="admin-field">
+                    <span>نام کاربری جدید</span>
+                    <input type="text" name="newUsername" value="<%= adminUsername %>" required />
+                  </label>
+                  <label class="admin-field">
+                    <span>رمز عبور جدید</span>
+                    <input type="password" name="newPassword" minlength="4" required />
+                  </label>
+                  <label class="admin-field">
+                    <span>تکرار رمز عبور جدید</span>
+                    <input type="password" name="confirmPassword" minlength="4" required />
+                  </label>
+                  <div class="admin-form__actions">
+                    <button class="admin-button" type="submit">به‌روزرسانی مشخصات</button>
+                  </div>
+                </form>
+              </section>
+            </section>
+          </section>
+        </div>
+      <% } %>
+    </main>
+  </body>
+</html>

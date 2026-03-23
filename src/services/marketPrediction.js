@@ -5,7 +5,7 @@ const {
   getAppCache,
   setAppCache
 } = require("../db");
-const { generateMarketPredictionFarsi } = require("./openRouter");
+const { generateMarketPredictionFarsi } = require("./aiClient");
 
 const CACHE_KEY = "market_prediction_fa_v1";
 const CACHE_TTL_HOURS = 24;
