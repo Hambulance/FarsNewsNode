@@ -58,6 +58,7 @@
               <a href="#chat-tool" class="admin-nav__link">TensorRT Chat</a>
               <a href="#providers" class="admin-nav__link">ارائه‌دهنده‌ها</a>
               <a href="#diagnostics" class="admin-nav__link">تست و سلامت</a>
+              <a href="#database" class="admin-nav__link">پایگاه داده</a>
               <a href="#access" class="admin-nav__link">دسترسی مدیر</a>
             </nav>
 
@@ -246,6 +247,46 @@
                     <small>پیام: <%= testResults ? testResults.local.message : "برای مشاهده‌ی نتیجه تست را اجرا کنید." %></small>
                   </article>
                 </div>
+              </section>
+            </section>
+
+            <section class="admin-category" id="database">
+              <div class="admin-category__header">
+                <div>
+                  <h3>پاک‌سازی پایگاه داده</h3>
+                </div>
+                <p>این بخش فقط خبرهای ذخیره‌شده را حذف می‌کند تا سایت از نو و با دیتابیس خالی شروع شود. تنظیمات مدیر و کلیدهای سرویس حفظ می‌شوند.</p>
+              </div>
+
+              <section class="admin-panel admin-panel--padded">
+                <div class="admin-panel__toolbar">
+                  <div>
+                    <h4>حذف کامل خبرها</h4>
+                    <p>این عملیات برگشت‌پذیر نیست. فقط زمانی اجرا می‌شود که تأیید `yes` انتخاب شده باشد.</p>
+                  </div>
+                </div>
+
+                <form class="admin-form" action="/admin/purge-db" method="post">
+                  <label class="admin-radio">
+                    <input type="radio" name="confirmPurge" value="no" checked />
+                    <span>
+                      <strong>No</strong>
+                      <small>هیچ داده‌ای حذف نشود.</small>
+                    </span>
+                  </label>
+
+                  <label class="admin-radio">
+                    <input type="radio" name="confirmPurge" value="yes" />
+                    <span>
+                      <strong>Yes</strong>
+                      <small>تمام خبرهای ذخیره‌شده حذف شوند و سایت از دیتابیس خالی شروع کند.</small>
+                    </span>
+                  </label>
+
+                  <div class="admin-form__actions">
+                    <button class="admin-button admin-button--danger" type="submit">پاک‌سازی دیتابیس خبرها</button>
+                  </div>
+                </form>
               </section>
             </section>
 

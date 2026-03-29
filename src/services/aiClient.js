@@ -389,6 +389,42 @@ async function streamArticleSummaryToFarsi({ title, sourceName, articleText, onT
   );
 }
 
+async function streamNewsContextAnalysisToFarsi({
+  title,
+  sourceName,
+  originalSummary,
+  translatedSummary,
+  onToken
+}) {
+  const contextParts = [
+    `Source: ${sourceName}`,
+    `Title: ${title}`
+  ];
+
+  if (originalSummary) {
+    contextParts.push(`Original summary: ${originalSummary}`);
+  }
+
+  if (translatedSummary) {
+    contextParts.push(`Existing Persian summary: ${translatedSummary}`);
+  }
+
+  return createStreamingChatCompletion(
+    [
+      {
+        role: "system",
+        content:
+          "You are a professional Persian newsroom editor. You could not access the full original article, so you must work only from the provided headline and summaries. Write a careful Persian analysis-style summary of the news in polished newsroom language. Remove duplication, source noise, and broken fragments. Do not invent missing facts. If details are limited, be explicit but still useful and concise. Output only Persian text in a few coherent paragraphs."
+      },
+      {
+        role: "user",
+        content: contextParts.join("\n")
+      }
+    ],
+    { temperature: 0.2, onToken }
+  );
+}
+
 async function generateMarketPredictionFarsi(newsItems) {
   const condensedNews = newsItems
     .map((item, index) => {
@@ -421,6 +457,7 @@ module.exports = {
   rewriteHeadlineToFarsi,
   rewriteSummaryToFarsi,
   streamArticleSummaryToFarsi,
+  streamNewsContextAnalysisToFarsi,
   testProviderConnection,
   translateFullArticleToFarsi
 };

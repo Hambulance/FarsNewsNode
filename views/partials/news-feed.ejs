@@ -4,8 +4,12 @@
   <div class="news-list">
     <% if (newsItems.length === 0) { %>
       <article class="empty-state">
-        <h2>هنوز خبری ذخیره نشده است</h2>
-        <p>به‌محض دریافت اولین خبرهای مرتبط با ایران، این بخش به‌صورت زنده پر می‌شود.</p>
+        <h2><%= search && search.isActive ? "نتیجه‌ای برای جستجوی شما پیدا نشد" : "هنوز خبری ذخیره نشده است" %></h2>
+        <p>
+          <%= search && search.isActive
+            ? `برای عبارت «${search.query}» خبری در پایگاه داده پیدا نشد.`
+            : "به‌محض دریافت اولین خبرهای مرتبط با ایران، این بخش به‌صورت زنده پر می‌شود." %>
+        </p>
       </article>
     <% } %>
 
@@ -63,6 +67,15 @@
         </div>
 
         <div class="news-card__links">
+          <button
+            class="news-card__ai-button"
+            type="button"
+            data-ai-summary-button
+            data-news-id="<%= item.id %>"
+            data-news-title="<%- item.translatedTitle %>"
+          >
+            تحلیل با AI
+          </button>
           <a href="<%= item.sourceUrl %>" target="_blank" rel="noreferrer">مشاهده در گوگل نیوز</a>
         </div>
       </article>
@@ -80,6 +93,25 @@
       <div class="title-modal__summary" id="title-modal-summary-block" hidden>
         <h3 class="title-modal__summary-label">خلاصه خبر</h3>
         <p class="title-modal__summary-text" id="title-modal-summary"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="analysis-modal" id="analysis-modal" hidden>
+    <div class="analysis-modal__backdrop" data-analysis-modal-close></div>
+    <div class="analysis-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="analysis-modal-heading">
+      <button class="analysis-modal__close" type="button" data-analysis-modal-close aria-label="بستن">×</button>
+      <p class="analysis-modal__eyebrow">تحلیل خبر با هوش مصنوعی</p>
+      <h2 class="analysis-modal__heading" id="analysis-modal-heading"></h2>
+      <div class="analysis-modal__status">
+        <div class="analysis-modal__progress">
+          <span class="analysis-modal__progress-bar" id="analysis-modal-progress-bar"></span>
+        </div>
+        <p class="analysis-modal__status-text" id="analysis-modal-status-text"></p>
+      </div>
+      <div class="analysis-modal__result" id="analysis-modal-result" hidden>
+        <p class="analysis-modal__cache-badge" id="analysis-modal-cache-badge" hidden>این تحلیل قبلاً برای این خبر ذخیره شده است.</p>
+        <p class="analysis-modal__result-text" id="analysis-modal-result-text"></p>
       </div>
     </div>
   </div>

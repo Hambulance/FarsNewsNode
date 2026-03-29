@@ -430,6 +430,11 @@ async function updateFullArticleTranslation({ id, fullArticleSourceUrl, fullArti
   );
 }
 
+async function purgeNewsDatabase() {
+  await run("DELETE FROM news_items");
+  await run("DELETE FROM sqlite_sequence WHERE name = 'news_items'");
+}
+
 function needsFarsiRefresh(text) {
   if (!text) {
     return true;
@@ -456,6 +461,7 @@ async function getNewsPage(page, pageSize) {
         translated_title AS translatedTitle,
         original_summary AS originalSummary,
         translated_summary AS translatedSummary,
+        full_article_farsi AS fullArticleFarsi,
         published_at AS publishedAt,
         created_at AS createdAt
       FROM news_items
@@ -477,6 +483,7 @@ async function getNewsPage(page, pageSize) {
     originalTitle: stripSourceSuffix(item.originalTitle, normalizeSourceName(item.sourceName)),
     translatedTitle: stripSourceSuffix(item.translatedTitle, normalizeSourceName(item.sourceName)),
     isNew: Boolean(item.isNew),
+    fullArticleFarsi: item.fullArticleFarsi || "",
     publishedAtFormatted: dayjs(item.publishedAt).format("YYYY/MM/DD HH:mm"),
     createdAtFormatted: dayjs(item.createdAt).format("YYYY/MM/DD HH:mm")
   }));
@@ -485,6 +492,81 @@ async function getNewsPage(page, pageSize) {
 async function getNewsCount() {
   const row = await get("SELECT COUNT(*) AS total FROM news_items");
   return row?.total || 0;
+}
+
+function buildSearchPattern(query) {
+  return `%${String(query || "").trim()}%`;
+}
+
+async function searchNewsCount(query) {
+  const row = await get(
+    `
+      SELECT COUNT(*) AS total
+      FROM news_items
+      WHERE
+        source_name LIKE ? OR
+        original_title LIKE ? OR
+        translated_title LIKE ? OR
+        original_summary LIKE ? OR
+        translated_summary LIKE ?
+    `,
+    Array(5).fill(buildSearchPattern(query))
+  );
+
+  return row?.total || 0;
+}
+
+async function searchNewsPage(query, page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  const searchPattern = buildSearchPattern(query);
+  const items = await all(
+    `
+      SELECT
+        id,
+        CASE
+          WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
+          ELSE 0
+        END AS isNew,
+        image_url AS imageUrl,
+        source_url AS sourceUrl,
+        google_news_url AS googleNewsUrl,
+        source_name AS sourceName,
+        original_title AS originalTitle,
+        translated_title AS translatedTitle,
+        original_summary AS originalSummary,
+        translated_summary AS translatedSummary,
+        full_article_farsi AS fullArticleFarsi,
+        published_at AS publishedAt,
+        created_at AS createdAt
+      FROM news_items
+      WHERE
+        source_name LIKE ? OR
+        original_title LIKE ? OR
+        translated_title LIKE ? OR
+        original_summary LIKE ? OR
+        translated_summary LIKE ?
+      ORDER BY
+        CASE
+          WHEN is_new = 1 AND datetime(created_at) >= datetime('now', '-5 minutes') THEN 1
+          ELSE 0
+        END DESC,
+        datetime(published_at) DESC,
+        id DESC
+      LIMIT ? OFFSET ?
+    `,
+    [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, pageSize, offset]
+  );
+
+  return items.map((item) => ({
+    ...item,
+    sourceName: normalizeSourceName(item.sourceName),
+    originalTitle: stripSourceSuffix(item.originalTitle, normalizeSourceName(item.sourceName)),
+    translatedTitle: stripSourceSuffix(item.translatedTitle, normalizeSourceName(item.sourceName)),
+    isNew: Boolean(item.isNew),
+    fullArticleFarsi: item.fullArticleFarsi || "",
+    publishedAtFormatted: dayjs(item.publishedAt).format("YYYY/MM/DD HH:mm"),
+    createdAtFormatted: dayjs(item.createdAt).format("YYYY/MM/DD HH:mm")
+  }));
 }
 
 async function getTopTickerItems(limit) {
@@ -526,6 +608,9 @@ module.exports = {
   getTopTickerItems,
   getNewsItemById,
   markOnlyItemsAsNew,
+  purgeNewsDatabase,
+  searchNewsCount,
+  searchNewsPage,
   setAppCache,
   updateNewsImage,
   updateNewsTranslations,

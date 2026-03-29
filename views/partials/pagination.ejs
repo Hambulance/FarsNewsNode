@@ -1,7 +1,7 @@
 <nav class="pagination" aria-label="صفحه‌بندی خبرها">
   <a
     class="pagination__link <%= pagination.hasPrev ? '' : 'is-disabled' %>"
-    href="/?page=<%= pagination.prevPage %>"
+    href="/?page=<%= pagination.prevPage %><%= pagination.searchParam %>"
     data-page-link="<%= pagination.prevPage %>"
     aria-disabled="<%= pagination.hasPrev ? 'false' : 'true' %>"
   >
@@ -12,7 +12,7 @@
   </div>
   <a
     class="pagination__link <%= pagination.hasNext ? '' : 'is-disabled' %>"
-    href="/?page=<%= pagination.nextPage %>"
+    href="/?page=<%= pagination.nextPage %><%= pagination.searchParam %>"
     data-page-link="<%= pagination.nextPage %>"
     aria-disabled="<%= pagination.hasNext ? 'false' : 'true' %>"
   >

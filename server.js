@@ -11,6 +11,9 @@ const {
   getTopTickerItems,
   getNewsCount,
   getNewsItemById,
+  purgeNewsDatabase,
+  searchNewsCount,
+  searchNewsPage,
   updateFullArticleTranslation
 } = require("./src/db");
 const { startNewsSync } = require("./src/services/googleNews");
@@ -18,6 +21,7 @@ const { createRealtimeServer } = require("./src/realtime");
 const {
   checkAiAvailability,
   getAiProviderStatus,
+  streamNewsContextAnalysisToFarsi,
   streamArticleSummaryToFarsi,
   testProviderConnection
 } = require("./src/services/aiClient");
@@ -95,22 +99,32 @@ async function bootstrap() {
 
   app.locals.siteTitle = "\u0641\u0627\u0631\u0633 \u0646\u06cc\u0648\u0632 \u0646\u0648\u062f";
 
-  async function buildPageModel(page) {
+  async function buildPageModel(page, query) {
     const currentPage = Math.max(Number.parseInt(page, 10) || 1, 1);
-    const totalItems = await getNewsCount();
+    const normalizedQuery = String(query || "").trim();
+    const isSearching = normalizedQuery.length > 0;
+    const totalItems = isSearching ? await searchNewsCount(normalizedQuery) : await getNewsCount();
     const totalPages = Math.max(Math.ceil(totalItems / NEWS_PER_PAGE), 1);
     const normalizedPage = Math.min(currentPage, totalPages);
+    const searchParam = isSearching ? `&q=${encodeURIComponent(normalizedQuery)}` : "";
 
     return {
-      newsItems: await getNewsPage(normalizedPage, NEWS_PER_PAGE),
+      newsItems: isSearching
+        ? await searchNewsPage(normalizedQuery, normalizedPage, NEWS_PER_PAGE)
+        : await getNewsPage(normalizedPage, NEWS_PER_PAGE),
       tickerItems: await getTopTickerItems(10),
+      search: {
+        query: normalizedQuery,
+        isActive: isSearching
+      },
       pagination: {
         currentPage: normalizedPage,
         totalPages,
         hasPrev: normalizedPage > 1,
         hasNext: normalizedPage < totalPages,
         prevPage: Math.max(normalizedPage - 1, 1),
-        nextPage: Math.min(normalizedPage + 1, totalPages)
+        nextPage: Math.min(normalizedPage + 1, totalPages),
+        searchParam
       }
     };
   }
@@ -170,7 +184,7 @@ async function bootstrap() {
   });
 
   app.get("/", async (req, res) => {
-    res.render("index", await buildPageModel(req.query.page));
+    res.render("index", await buildPageModel(req.query.page, req.query.q));
   });
 
   app.get("/admin", async (req, res) => {
@@ -301,8 +315,37 @@ async function bootstrap() {
     });
   });
 
+  app.post("/admin/purge-db", async (req, res) => {
+    const admin = await getAuthenticatedAdmin(req);
+    if (!admin) {
+      clearAdminSessionCookie(res);
+      res.redirect("/admin");
+      return;
+    }
+
+    const confirmation = String(req.body.confirmPurge || "").trim().toLowerCase();
+    if (confirmation !== "yes") {
+      res.render("admin", {
+        ...(await buildAdminViewModel({ notice: "حذف پایگاه داده لغو شد. برای اجرا باید yes انتخاب شود." })),
+        isAuthenticated: true
+      });
+      return;
+    }
+
+    await purgeNewsDatabase();
+    realtime.broadcast("news:update", {
+      insertedCount: 0,
+      topTickerItems: []
+    });
+
+    res.render("admin", {
+      ...(await buildAdminViewModel({ notice: "پایگاه داده‌ی خبرها پاک شد." })),
+      isAuthenticated: true
+    });
+  });
+
   app.get("/api/news", async (req, res) => {
-    const pageModel = await buildPageModel(req.query.page);
+    const pageModel = await buildPageModel(req.query.page, req.query.q);
 
     res.render("partials/news-feed", pageModel, (error, html) => {
       if (error) {
@@ -348,8 +391,23 @@ async function bootstrap() {
       }
 
       sendEvent("progress", { value: 12, label: "در حال دریافت مقاله‌ی اصلی..." });
-      const article = await fetchArticleContent(item.sourceUrl);
+      let article = null;
+      try {
+        article = await fetchArticleContent(item.sourceUrl);
+      } catch (error) {
+        if (item.googleNewsUrl && item.googleNewsUrl !== item.sourceUrl) {
+          article = await fetchArticleContent(item.googleNewsUrl).catch(() => null);
+        }
+      }
       sendEvent("progress", { value: 28, label: "مقاله دریافت شد. در حال خلاصه‌سازی خبر..." });
+      if (!article) {
+        article = {
+          finalUrl: item.sourceUrl,
+          text: [item.originalTitle, item.originalSummary, item.translatedSummary]
+            .filter(Boolean)
+            .join("\n\n")
+        };
+      }
 
       let lastProgress = 28;
       const summary = await streamArticleSummaryToFarsi({

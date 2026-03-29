@@ -18,7 +18,7 @@
     />
     <link rel="stylesheet" href="/public/styles.css" />
   </head>
-  <body data-current-page="<%= pagination.currentPage %>">
+  <body data-current-page="<%= pagination.currentPage %>" data-current-search="<%= search.query %>">
     <div class="page-shell">
       <header class="hero">
         <div class="hero__brand">
@@ -34,6 +34,21 @@
             هوش مصنوعی خبرهای تازه را بررسی و تحلیل می‌کند، مهم‌ترین تحولات را جمع‌بندی می‌کند
             و جدیدترین به‌روزرسانی‌ها را به‌صورت زنده در اختیار شما می‌گذارد.
           </p>
+          <form class="hero-search" action="/" method="get">
+            <label class="hero-search__field" for="news-search">
+              <input
+                id="news-search"
+                type="search"
+                name="q"
+                value="<%= search.query %>"
+                placeholder="جستجو در خبرهای ذخیره‌شده..."
+              />
+            </label>
+            <button class="hero-search__submit" type="submit">جستجو</button>
+            <% if (search.isActive) { %>
+              <a class="hero-search__reset" href="/">حذف جستجو</a>
+            <% } %>
+          </form>
         </div>
         <div class="hero__status">
           <div class="status-card">
@@ -59,7 +74,7 @@
       </section>
 
       <main id="news-container">
-        <%- include("partials/news-feed", { newsItems, pagination }) %>
+        <%- include("partials/news-feed", { newsItems, pagination, search }) %>
       </main>
     </div>
 
