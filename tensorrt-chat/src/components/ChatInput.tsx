@@ -61,14 +61,14 @@ export function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[28px] border border-slate-800 bg-slate-950/90 p-3 shadow-panel"
+      className="rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(22,24,30,0.96),rgba(14,16,21,0.96))] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.38)] md:p-4"
     >
       {documents.length > 0 ? (
         <div className="mb-3 flex flex-wrap gap-2">
           {documents.map((document) => (
             <div
               key={document.id}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-200"
             >
               <span className="max-w-52 truncate">{document.fileName}</span>
               <button
@@ -84,12 +84,22 @@ export function ChatInput({
         </div>
       ) : null}
 
+      <div className="mb-3 flex items-center justify-between gap-3 px-1 text-[11px] uppercase tracking-[0.24em] text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-2 w-2 rounded-full bg-[#8ab4ff] shadow-[0_0_16px_rgba(138,180,255,0.85)]" />
+          <span>Message Dock</span>
+        </div>
+        <div className="text-right text-[10px] text-slate-600">
+          {isUploadingDocuments ? "Processing attachments" : "Local inference only"}
+        </div>
+      </div>
+
       <div className="flex items-end gap-3">
         <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((current) => !current)}
-            className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-3xl leading-none text-slate-200 transition hover:border-slate-700 hover:text-white"
+            className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#11141b] text-3xl leading-none text-slate-200 transition hover:border-[#3f72bd] hover:text-white"
             aria-expanded={menuOpen ? "true" : "false"}
             aria-label="Open attachment menu"
           >
@@ -97,7 +107,7 @@ export function ChatInput({
           </button>
 
           {menuOpen ? (
-            <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-72 rounded-[26px] border border-white/10 bg-[#2f2f2f] p-3 text-left shadow-2xl">
+            <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-72 rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(24,28,35,0.98),rgba(15,17,22,0.98))] p-3 text-left shadow-2xl">
               <label className="flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/5">
                 <input
                   type="file"
@@ -110,36 +120,47 @@ export function ChatInput({
                     event.currentTarget.value = "";
                   }}
                 />
-                <span className="text-lg">📎</span>
+                <span className="text-lg" aria-hidden="true">
+                  📎
+                </span>
                 <span>{isUploadingDocuments ? "Processing files..." : "Add photos & files"}</span>
               </label>
               <div className="my-2 border-t border-white/10" />
               <div className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300">
-                <span className="text-lg">🌐</span>
+                <span className="text-lg" aria-hidden="true">
+                  🌐
+                </span>
                 <span>Web search is enabled by default</span>
               </div>
             </div>
           ) : null}
         </div>
 
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              void submitValue(value);
-            }
-          }}
-          rows={1}
-          placeholder="Send a message to your local TensorRT-LLM model..."
-          className="min-h-14 flex-1 resize-none rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-600"
-        />
+        <div className="flex-1 rounded-[26px] border border-white/8 bg-[#11141b] px-4 py-3">
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void submitValue(value);
+              }
+            }}
+            rows={1}
+            placeholder="Type a message to the local engine..."
+            className="min-h-14 w-full resize-none bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+          />
+          <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-slate-500">
+            <span>Press Enter to send</span>
+            <span dir="ltr">TensorRT-LLM local runtime</span>
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={disabled || !value.trim()}
-          className="inline-flex h-14 min-w-28 items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+          className="inline-flex h-14 min-w-28 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#8bb7ff,#1d73d1)] px-5 text-sm font-semibold text-[#08111d] shadow-[0_16px_36px_rgba(40,115,216,0.36)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
         >
           Send
         </button>

@@ -70,6 +70,18 @@ export function ChatApp() {
     );
   }, [chatState]);
 
+  const conversationCount = chatState.conversations.length;
+  const documentCount = activeConversation?.documents.length || 0;
+  const messageCount = activeConversation?.messages.length || 0;
+  const lastUpdatedLabel = activeConversation?.updatedAt
+    ? new Date(activeConversation.updatedAt).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    : "No activity";
+
   function updateConversation(conversationId: string, updater: (conversation: Conversation) => Conversation) {
     setChatState((current) => ({
       ...current,
@@ -251,15 +263,15 @@ export function ChatApp() {
 
   if (!isHydrated) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0b1020] px-6 text-slate-200">
+      <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-slate-200">
         Loading chat interface...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1020] px-4 py-4 text-slate-100 md:px-6 md:py-6">
-      <div className="mx-auto grid h-[calc(100vh-2rem)] max-w-[1600px] grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <main className="min-h-screen bg-[#08090d] px-3 py-3 text-slate-100 md:px-5 md:py-5">
+      <div className="mx-auto grid h-[calc(100vh-1.5rem)] max-w-[1720px] grid-cols-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-5">
         <Sidebar
           conversations={chatState.conversations}
           activeConversationId={activeConversation?.id || null}
@@ -274,7 +286,55 @@ export function ChatApp() {
           }}
         />
 
-        <section className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-4">
+        <section className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 lg:gap-4">
+          <header className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(17,20,28,0.96),rgba(10,12,17,0.96))] px-5 py-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur xl:px-7">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-slate-500">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-[#8ab4ff] shadow-[0_0_18px_rgba(138,180,255,0.85)]" />
+                  <span>System Status</span>
+                  <span className="text-slate-400">{activeConversation ? "Ready" : "Idle"}</span>
+                </div>
+                <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                  {activeConversation?.title || "Engine Console"}
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">
+                  Local-first inference panel for your TensorRT-LLM runtime. Chat stays attached to the active
+                  conversation while uploads, history, and assistant output remain inside this workspace.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label: "Engine", value: "TensorRT-LLM" },
+                  { label: "Model", value: "Qwen2-7B" },
+                  { label: "Messages", value: String(messageCount) },
+                  { label: "Documents", value: String(documentCount) }
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3"
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.28em] text-slate-500">{item.label}</div>
+                    <div className="mt-2 text-sm font-semibold text-slate-100">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+              <div className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-2">
+                Active conversations: <span className="text-slate-200">{conversationCount}</span>
+              </div>
+              <div className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-2">
+                Updated: <span className="text-slate-200">{lastUpdatedLabel}</span>
+              </div>
+              <div className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-2">
+                Local endpoint: <span dir="ltr" className="text-slate-200">127.0.0.1:8000</span>
+              </div>
+            </div>
+          </header>
+
           <ChatWindow
             title={activeConversation?.title || "New Chat"}
             messages={activeConversation?.messages || []}

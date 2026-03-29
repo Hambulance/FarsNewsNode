@@ -12,11 +12,26 @@ html {
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: Inter, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background:
-    radial-gradient(circle at top right, rgba(16, 163, 127, 0.08), transparent 24%),
-    radial-gradient(circle at bottom left, rgba(47, 84, 235, 0.08), transparent 26%),
-    #0b1020;
+    radial-gradient(circle at top left, rgba(44, 106, 198, 0.18), transparent 24%),
+    radial-gradient(circle at 85% 12%, rgba(141, 185, 255, 0.08), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(29, 115, 209, 0.12), transparent 28%),
+    linear-gradient(180deg, #0b0c11 0%, #07080c 100%);
+  color: #f5f7fb;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 85%);
+  opacity: 0.35;
 }
 
 * {
@@ -32,4 +47,9 @@ textarea {
 code,
 [dir="ltr"] {
   direction: ltr;
+}
+
+::selection {
+  background: rgba(118, 169, 255, 0.35);
+  color: #fff;
 }
